@@ -1,6 +1,5 @@
 use inc::Module::Install;
 
-name		'XML-Generator-XMPP';
 all_from	'lib/XML/Generator/XMPP.pm';
 perl_version    '5.006';
 

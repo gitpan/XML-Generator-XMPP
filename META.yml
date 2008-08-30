@@ -5,11 +5,12 @@ author:
 build_requires:
   Test::More: 0
 distribution_type: module
-generated_by: 'Module::Install version 0.75'
+generated_by: 'Module::Install version 0.77'
 license: gpl
 meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.3.html
-  version: 1.3
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+module_name: XML::Generator::XMPP
 name: XML-Generator-XMPP
 no_index:
   directory:
@@ -18,10 +19,10 @@ no_index:
 provides:
   XML::Generator::XMPP:
     file: lib/XML/Generator/XMPP.pm
-    version: 0.01
+    version: 0.02
 requires:
   XML::LibXML::XPathContext: 1.63
   XML::SAX::Base: 0
   XML::SAX::IncrementalBuilder::LibXML: 0.02
   perl: 5.6.0
-version: 0.01
+version: 0.02

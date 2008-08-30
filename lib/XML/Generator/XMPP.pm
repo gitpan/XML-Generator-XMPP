@@ -4,7 +4,7 @@ use warnings;
 
 use base qw(XML::SAX::Base);
 
-our $VERSION='0.01';
+our $VERSION='0.02';
 
 =head1 NAME
 
@@ -105,6 +105,11 @@ sub start {
    });
 }
 
+my $count = 0;
+sub _generate_id {
+   return "id-" . $count++;
+}
+
 sub _handle_node {
    my ($self, $node, $data) = @_;
 
@@ -114,7 +119,7 @@ sub _handle_node {
    my ($ns, $name) = split (':', $node);
    my ($ns_uri, $new_mapping, $el_data);
    if ($ns_uri = $nss->get_uri($ns)) {
-      my $fullname = ($ns ? "$ns:" : "") . $name;
+      my $fullname = ($ns ? "$ns:" : '') . $name;
       $el_data = {Name => $fullname, LocalName => $name, Prefix => $ns, NamespaceURI => $ns_uri};
    } else {
       $new_mapping = 1;
@@ -134,6 +139,7 @@ sub _handle_node {
       foreach my $fullname (keys %$list) {
          my ($attr_ns, $name) = split (':', $fullname);
          if ($attr_ns eq $ns) {
+            # default attribute namespace is the namespace of the element.
             $list->{$name} = delete $list->{$fullname};
          }
       }
@@ -146,7 +152,9 @@ sub _handle_node {
       if ($type eq 'Text') {
          $self->characters({Data => $data});
       } elsif ($type eq 'Child') {
-         $self->_handle_node(@$data);
+         while (@$data) {
+            $self->_handle_node(splice (@$data, 0, 2));
+         }
       } elsif ($type eq 'Subtree') {
          $returnnode->appendChild($data);
       } else {
@@ -187,7 +195,7 @@ prefix is mandatory, and must be registered with the XPathContext.
 
 Creates a Text node.
 
-=item Child => [ 'nsprefix:nodename' => [ ... ] ]
+=item Child => [ 'nsprefix:nodename' => [ ... ], ... ]
 
 Create one or more child nodes. The same syntax as for the main nodes
 list applies.
@@ -226,6 +234,46 @@ sub end {
    $self->end_prefix_mapping({Prefix => 'stream', NamespaceURI => 'http://etherx.jabber.org/streams'});
    $self->end_prefix_mapping({Prefix => ''});
    $self->end_document({});
+}
+
+=head1 CONVENIENCE METHODS
+
+The following are methods you can use to ease the construction of
+the structure you pass to the nodes() method. They return a listref
+you can pass into nodes() as the top listref it expects.
+
+  $self->nodes( $self->iq(...) );
+
+=cut
+
+=head2 iq TYPE, TO, CHILDREN
+
+  $iq = $self->iq(get => 'someone@example.com', [
+                "disco:query" => [],
+        ],
+  ) 
+
+Creates the structure for an 'iq' element. The TYPE and TO parameters
+should contain the content of the attributes with the corresponding
+name, and CHILDREN is a listref containing zero or more child
+descriptions in the same format as you use in nodes()
+
+=cut
+
+sub iq {
+   my ($self, $type, $destination, $child) = @_;
+
+   my $attr = {
+            ':type' => $type,
+            ':id' => _generate_id(),
+   };
+   $attr->{':to'} = $destination if $destination;
+
+   return [":iq" => [
+         Attributes => $attr,
+         Child => $child,
+      ]
+   ];
 }
 
 1;
